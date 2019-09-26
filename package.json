@@ -15,7 +15,8 @@
     "express": "4.17.1",
     "express-session": "1.16.2",
     "mongoose": "^5.7.1",
-    "pug": "2.0.4"
+    "pug": "2.0.4",
+    "redis": "^2.8.0"
   },
   "devDependencies": {
     "eslint": "^4.8.0",
