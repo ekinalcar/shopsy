@@ -2,15 +2,16 @@ const express = require('express');
 const itemService = require('../../services/itemService');
 const basketService = require('../../services/basketService');
 const userService = require('../../services/userService');
+const orderService = require('../../services/orderService');
 
 module.exports = (config) => {
   const router = express.Router();
   const log = config.logger;
 
   const basket = basketService(config.redis.client);
+  const order = orderService(config.mysql.client);
 
   router.get('/', async (req, res) => {
-
     const basketItems = await basket.getAll(res.locals.currentUser.id);
     let items = [];
     if (basketItems) {
@@ -26,7 +27,6 @@ module.exports = (config) => {
   });
 
   router.get('/remove/:itemId', async (req, res) => {
-
     if (!res.locals.currentUser) {
       req.session.messages.push({
         type: 'warning',

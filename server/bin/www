@@ -1,13 +1,21 @@
-#!/usr/bin/env node
-
-// Dependencies
 const http = require('http');
 const config = require('../config');
 const App = require('../app');
 const mongoose = require('mongoose');
 const redis = require('redis');
-
+const Sequelize = require('sequelize');
 const log = config.logger;
+
+const sequelize = new Sequelize(config.mysql.options);
+
+sequelize.authenticate().then(()=>{
+    log.info('connected to mysql')
+}).catch((err) => {
+    log.fatal(err);
+    process.exit;
+});
+
+config.mysql.client = sequelize;
 
 mongoose.connect(config.mongodb.dsn, {
   useNewUrlParser: true,
@@ -16,6 +24,7 @@ mongoose.connect(config.mongodb.dsn, {
   .then(() => {
     log.info('connected to mongo db');
   });
+
 
 const redisClient = redis.createClient(config.redis.options);
 redisClient.on('ready', () => {
