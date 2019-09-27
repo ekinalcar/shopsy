@@ -5,8 +5,14 @@ const session = require('express-session');
 const RedisStore = require('connect-redis')(session);
 const routeHandler = require('./routes');
 
+const userService = require('./services/userService');
+const basketService = require('./services/basketService');
+
+
 module.exports = (config) => {
   const app = express();
+
+  const basket = basketService(config.redis.client);
 
   // view engine setup
   app.set('views', path.join(__dirname, 'views'));
@@ -44,6 +50,23 @@ module.exports = (config) => {
       req.session.messages = [];
     }
     res.locals.messages = req.session.messages;
+    try {
+      if (req.session.userId) {
+        res.locals.currentUser = await userService.getOne(req.session.userId);
+        const basketContents = await basket.getAll(req.session.userId);
+        let count = 0;
+        if (basketContents) {
+          Object.keys(basketContents)
+            .forEach((key) => {
+              count += parseInt(basketContents[key], 10);
+            });
+        }
+        res.locals.basketCount = count;
+      }
+    } catch (err) {
+      return next(err);
+    }
+
     return next();
   });
 

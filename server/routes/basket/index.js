@@ -1,30 +1,32 @@
 const express = require('express');
+const itemService = require('../../services/itemService');
+const basketService = require('../../services/basketService');
+const userService = require('../../services/userService');
 
 module.exports = (config) => {
   const router = express.Router();
   const log = config.logger;
 
-  router.get('/', async (req, res) => {
-    return res.render('basket', {});
+  const basket = basketService(config.redis.client);
 
-    /*
+  router.get('/', async (req, res) => {
+
     const basketItems = await basket.getAll(res.locals.currentUser.id);
     let items = [];
     if (basketItems) {
-      items = await Promise.all(Object.keys(basketItems).map(async (key) => {
-        const item = await itemService.getOne(key);
-        item.quantity = basketItems[key];
-        return item;
-      }));
+      items = await Promise.all(Object.keys(basketItems)
+        .map(async (key) => {
+          const item = await itemService.getOne(key);
+          item.quantity = basketItems[key];
+          return item;
+        }));
     }
     return res.render('basket', { items });
-    */
+
   });
 
-  router.get('/remove/:itemId', async (req, res, next) => {
-    return next('Not implemented');
+  router.get('/remove/:itemId', async (req, res) => {
 
-    /*
     if (!res.locals.currentUser) {
       req.session.messages.push({
         type: 'warning',
@@ -49,13 +51,9 @@ module.exports = (config) => {
     }
 
     return res.redirect('/basket');
-    */
   });
 
-  router.get('/buy', async (req, res, next) => {
-    return next('Not implemented');
-
-    /*
+  router.get('/buy', async (req, res) => {
     try {
       const userId = res.locals.currentUser.id;
       const user = res.locals.currentUser;
@@ -70,20 +68,22 @@ module.exports = (config) => {
 
       // Find the item for each basket entry and add the quantity to it
       // Return a new array with items plus quantity as new field
-      const items = await Promise.all(Object.keys(basketItems).map(async (key) => {
-        const item = await itemService.getOne(key);
-        item.quantity = basketItems[key];
-        return item;
-      }));
+      const items = await Promise.all(Object.keys(basketItems)
+        .map(async (key) => {
+          const item = await itemService.getOne(key);
+          item.quantity = basketItems[key];
+          return item;
+        }));
 
       // Run this in a sequelize transaction
       await order.inTransaction(async (t) => {
         // Create a new order and add all items
         await order.create(user, items, t);
         // Clear the users basket
-        await Promise.all(Object.keys(basketItems).map(async (key) => {
-          await basket.remove(key, userId);
-        }));
+        await Promise.all(Object.keys(basketItems)
+          .map(async (key) => {
+            await basket.remove(key, userId);
+          }));
       });
 
       req.session.messages.push({
@@ -100,7 +100,6 @@ module.exports = (config) => {
       log.fatal(err);
       return res.redirect('/basket');
     }
-    */
   });
 
   return router;
